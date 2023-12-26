@@ -3,6 +3,8 @@ from attr import dataclass
 from hbm import Hbm
 import random
 
+from vm import write
+
 
 @dataclass
 class Task:
@@ -17,7 +19,7 @@ class Task:
     op: int # 0 - write, 1 - read                   | 8
     blob: List[int]                                 # 9       
     canGet: int                                     #10
-    state: int #0 - dont run, 1 - memory op, 2 run 3 done       #11
+    state: int #0 - dont run, 1 - run, 2 done       #11
     ticks : int
     
 @dataclass
@@ -45,3 +47,8 @@ for i in range (0, 100):
     state = 0
     ticks = random.randint(10, 30)
     parts_count = memory % 10
+
+
+write([__taskQueue])
+for _ in range(50):
+    ticks(__workloadTable, )
