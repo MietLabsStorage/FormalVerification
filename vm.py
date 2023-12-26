@@ -3,12 +3,16 @@ import random
 from typing import List, Self
 import deal
 from main import m_hbm
+from main import Tpc
 
   
 __workloadTable = []
 for i, cell in enumerate(m_hbm.blob):
     __workloadTable[i] = [2, 0, 0]
 __taskQueue = []
+__tcp = []
+for i in range(0, 6):
+    __tcp.append(Tpc(i, 0))
 
 
 @deal.pre(lambda taskQueue: len(taskQueue) >= 0)
@@ -22,26 +26,62 @@ def nextId(taskQueue: List[List[int]]) -> int:
 
 def tick(workloadTable: List[List[int], taskQueues: List[List[int]]]):
     for task in filter(lambda x: x.canGet == 1 and x.part_idx == 1, __taskQueue):
-        isFree = True
-        for i in range(task.start_addr, task.end_addr + 1):
-            # проверка каждой яячейко на то что с ней сейчас можно работать
-            #!!!тут сложнее логика должна быть 
-            isFree = isFree and __workloadTable[i].workload != 0 and __workloadTable[i].workload != 1
-        if isFree:
-            ticktack = random.randint(10,30)
+        if task.state == 0:   
+            isFree = True
             for i in range(task.start_addr, task.end_addr + 1):
-                workloadTable[i][0] = task.op
-                workloadTable[i][1] = ticktack
-                workloadTable[i][2] = task.task_id                
-        # !!! если workloadTable[i][1] = 0 то нужно 
-        #       если таска была на запись - записать в hbm
-        #       если таска была на чтение - то записать из hbm в task[9]
+                if __workloadTable[i][0].workload == 0:
+                    isFree = False
+                    break
+                        
+            if isFree:
+                ticktack = random.randint(10,30)
+                for i in range(task.start_addr, task.end_addr + 1):
+                    workloadTable[i][0] = task.op
+                    workloadTable[i][1] = ticktack
+                    workloadTable[i][2] = task.task_id                
+                
+        elif task.state == 1:
+            if task.canGet == 0:
+                if task.op == 0:
+                    write()
+                    for i in range(task.start_addr, task.end_addr + 1):
+                        __workloadTable[i][0] -= 1          
+                        if __workloadTable[i][1] == 0:
+                            __workloadTable[i][0] == 2
+                            task.state = 2
+                else:
+                    read()
+                    for i in range(task.start_addr, task.end_addr + 1):
+                        __workloadTable[i][0] -= 1          
+                        if __workloadTable[i][1] == 0:
+                            __workloadTable[i][0] == 2
+                            task.state = 2
+                              
+            elif task.state == 2:
+                for tcp in __tcp:
+                    if tcp.state == 0:
+                        task.tcp_id = tcp.id
+                        break
+
+                if task.tpc_id == -1:
+                    continue
+                else:
+                    #выполнение самой таски   
+                    task.ticks -= 1
+                    if task.ticks == 0:
+                        task.state = 3 
+                
+
+        #избавляемся от выполненных задач
+        condition = lambda x: x.state == 3
+        __taskQueue = [x for x in __taskQueue if not condition(x)]
+
 
 
 @deal.pre(lambda start_addr: start_addr >= 0)
-@deal.pre(lambda start_addr: start_addr < 10)
+@deal.pre(lambda start_addr: start_addr < 100)
 @deal.pre(lambda end_addr: end_addr >= 0)
-@deal.pre(lambda end_addr: end_addr < 10)
+@deal.pre(lambda end_addr: end_addr < 100)
 @deal.pre(lambda start_addr, end_addr: start_addr > end_addr)
 def read(
     taskQueue: list[list[int]],
