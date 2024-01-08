@@ -35,7 +35,7 @@ class Task:
 # таблица занятости ячеек памяти
 workloadsTable = []
 for i, cell in enumerate(m_hbm):
-    workloadsTable[i] = [2, 0, 0]
+    workloadsTable.append([2, 0, 0])
     
 # таблица очереди тасок
 taskQueue: List[int] = []
@@ -66,7 +66,7 @@ def tick(workloadTable: List[List[int]], taskQueues: List[List[int]], read_tasks
     
     for task in filtered_tasks:
         # если таска еще не в работе
-        if task[11] == 0:   
+        if task[11] == 0:
             isFree = True
             for i in range(task[1], task[2] + 1):
                 # TODO если память читается а мы хотим записать добавить проверку
@@ -117,11 +117,11 @@ def tick(workloadTable: List[List[int]], taskQueues: List[List[int]], read_tasks
 
 
 
-@deal.pre(lambda start_addr: start_addr >= 0)
-@deal.pre(lambda start_addr: start_addr < 100)
-@deal.pre(lambda end_addr: end_addr >= 0)
-@deal.pre(lambda end_addr: end_addr < 100)
-@deal.pre(lambda start_addr, end_addr: start_addr > end_addr)
+@deal.pre(lambda taskQueue, start_addr, end_addr, part, parts_count, task_group_id, tcp_id: start_addr >= 0)
+@deal.pre(lambda taskQueue, start_addr, end_addr, part, parts_count, task_group_id, tcp_id: start_addr < 100)
+@deal.pre(lambda taskQueue, start_addr, end_addr, part, parts_count, task_group_id, tcp_id: end_addr >= 0)
+@deal.pre(lambda taskQueue, start_addr, end_addr, part, parts_count, task_group_id, tcp_id: end_addr < 100)
+@deal.pre(lambda taskQueue, start_addr, end_addr, part, parts_count, task_group_id, tcp_id: start_addr < end_addr)
 def read(
     taskQueue: list[list[int]],
     start_addr: int,
@@ -144,11 +144,11 @@ def read(
     return task_id
 
 
-@deal.pre(lambda start_addr: start_addr >= 0)
-@deal.pre(lambda start_addr: start_addr < 100)
-@deal.pre(lambda end_addr: end_addr >= 0)
-@deal.pre(lambda end_addr: end_addr < 100)
-@deal.pre(lambda start_addr, end_addr: start_addr < end_addr)
+@deal.pre(lambda taskQueue, start_addr, end_addr, part, parts_count, task_group_id, tcp_id, blob: start_addr >= 0)
+@deal.pre(lambda taskQueue, start_addr, end_addr, part, parts_count, task_group_id, tcp_id, blob: start_addr < 100)
+@deal.pre(lambda taskQueue, start_addr, end_addr, part, parts_count, task_group_id, tcp_id, blob: end_addr >= 0)
+@deal.pre(lambda taskQueue, start_addr, end_addr, part, parts_count, task_group_id, tcp_id, blob: end_addr < 100)
+@deal.pre(lambda taskQueue, start_addr, end_addr, part, parts_count, task_group_id, tcp_id, blob: start_addr < end_addr)
 def write(
     taskQueue: List[List[int]],
     start_addr: int,
