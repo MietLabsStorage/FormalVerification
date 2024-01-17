@@ -38,10 +38,10 @@ pre_contracts_addrs_parts = deal.chain(
 	deal.pre(lambda start_addr1, end_addr1, blob1, start_addr2, end_addr2, blob2, start_addr3, end_addr3, blob3, start_addr4, end_addr4, blob4: 0 <= start_addr4 <= 100),
 	deal.pre(lambda start_addr1, end_addr1, blob1, start_addr2, end_addr2, blob2, start_addr3, end_addr3, blob3, start_addr4, end_addr4, blob4: 0 <= end_addr4 <= 100),
 	deal.pre(lambda start_addr1, end_addr1, blob1, start_addr2, end_addr2, blob2, start_addr3, end_addr3, blob3, start_addr4, end_addr4, blob4: start_addr4 < end_addr2),
-	deal.pre(lambda start_addr1, end_addr1, blob1, start_addr2, end_addr2, blob2, start_addr3, end_addr3, blob3, start_addr4, end_addr4, blob4: enshure_addrs_intersect(start_addr1, end_addr1, start_addr2, end_addr2)),
-	deal.pre(lambda start_addr1, end_addr1, blob1, start_addr2, end_addr2, blob2, start_addr3, end_addr3, blob3, start_addr4, end_addr4, blob4: not enshure_addrs_intersect(start_addr1, end_addr1, start_addr3, end_addr3)),
-	deal.pre(lambda start_addr1, end_addr1, blob1, start_addr2, end_addr2, blob2, start_addr3, end_addr3, blob3, start_addr4, end_addr4, blob4: enshure_addrs_intersect(start_addr3, end_addr3, start_addr4, end_addr4)),
-	deal.pre(lambda start_addr1, end_addr1, blob1, start_addr2, end_addr2, blob2, start_addr3, end_addr3, blob3, start_addr4, end_addr4, blob4: not enshure_addrs_intersect(start_addr4, end_addr4, start_addr2, end_addr2)),
+	deal.pre(lambda start_addr1, end_addr1, blob1, start_addr2, end_addr2, blob2, start_addr3, end_addr3, blob3, start_addr4, end_addr4, blob4: not enshure_addrs_intersect(start_addr1, end_addr1, start_addr2, end_addr2)),
+	deal.pre(lambda start_addr1, end_addr1, blob1, start_addr2, end_addr2, blob2, start_addr3, end_addr3, blob3, start_addr4, end_addr4, blob4: enshure_addrs_intersect(start_addr1, end_addr1, start_addr3, end_addr3)),
+	deal.pre(lambda start_addr1, end_addr1, blob1, start_addr2, end_addr2, blob2, start_addr3, end_addr3, blob3, start_addr4, end_addr4, blob4: not enshure_addrs_intersect(start_addr3, end_addr3, start_addr4, end_addr4)),
+	deal.pre(lambda start_addr1, end_addr1, blob1, start_addr2, end_addr2, blob2, start_addr3, end_addr3, blob3, start_addr4, end_addr4, blob4: enshure_addrs_intersect(start_addr4, end_addr4, start_addr2, end_addr2)),
 )
 
 pre_contracts_parts = deal.chain(
@@ -72,7 +72,7 @@ def two_writes_with_one_part(start_addr1: int, end_addr1: int, blob1: List[int],
     tick(vm_workloadsTable, vm_taskQueue, vm_read_tasks_results)
     vm_write(vm_taskQueue, start_addr2, end_addr2, 1, 1, 2, 2, blob2)
     tick(vm_workloadsTable, vm_taskQueue, vm_read_tasks_results)    
-    for _ in range(40):
+    for _ in range(40 * 2):
         tick(vm_workloadsTable, vm_taskQueue, vm_read_tasks_results)
         
     # читаем 1
@@ -109,7 +109,7 @@ def read_and_write_with_one_part(start_addr1: int, end_addr1: int, blob1: List[i
     tick(vm_workloadsTable, vm_taskQueue, vm_read_tasks_results)
     idx1 = vm_read(vm_taskQueue, start_addr1, end_addr1, 1, 1, 1, 1)    
     tick(vm_workloadsTable, vm_taskQueue, vm_read_tasks_results)    
-    for _ in range(40):
+    for _ in range(40 * 2):
         tick(vm_workloadsTable, vm_taskQueue, vm_read_tasks_results)
     
     # читаем 2
@@ -140,7 +140,7 @@ def two_reads_with_one_part(start_addr1: int, end_addr1: int, blob1: List[int], 
     tick(vm_workloadsTable, vm_taskQueue, vm_read_tasks_results)    
     idx2 = vm_read(vm_taskQueue, start_addr1, end_addr1, 1, 1, 2, 2)
     tick(vm_workloadsTable, vm_taskQueue, vm_read_tasks_results)    
-    for _ in range(40):
+    for _ in range(40 * 2):
         tick(vm_workloadsTable, vm_taskQueue, vm_read_tasks_results)
         
     # получаем результаты чтений по аддресам на которые записывали    
@@ -164,11 +164,11 @@ def two_writes_with_two_part(
     tick(vm_workloadsTable, vm_taskQueue, vm_read_tasks_results)
     vm_write(vm_taskQueue, start_addr2, end_addr2, 2, 2, 1, 1, blob2)
     tick(vm_workloadsTable, vm_taskQueue, vm_read_tasks_results)    
-    vm_write(vm_taskQueue, start_addr3, end_addr3, 1, 2, 2, 2, blob4)
+    vm_write(vm_taskQueue, start_addr3, end_addr3, 1, 2, 2, 2, blob3)
     tick(vm_workloadsTable, vm_taskQueue, vm_read_tasks_results)
     vm_write(vm_taskQueue, start_addr4, end_addr4, 2, 2, 2, 2, blob4)
     tick(vm_workloadsTable, vm_taskQueue, vm_read_tasks_results)    
-    for _ in range(40):
+    for _ in range(40 * 3):
         tick(vm_workloadsTable, vm_taskQueue, vm_read_tasks_results)
         
     # читаем 1
@@ -231,10 +231,8 @@ def read_and_write_with_two_part(
     idx1 = vm_read(vm_taskQueue, start_addr1, end_addr1, 1, 2, 1, 1)    
     tick(vm_workloadsTable, vm_taskQueue, vm_read_tasks_results)
     idx2 = vm_read(vm_taskQueue, start_addr2, end_addr2, 2, 2, 1, 1)
-    tick(vm_workloadsTable, vm_taskQueue, vm_read_tasks_results)    
-    for _ in range(40):
-        tick(vm_workloadsTable, vm_taskQueue, vm_read_tasks_results)  
-    for _ in range(40):
+    tick(vm_workloadsTable, vm_taskQueue, vm_read_tasks_results)     
+    for _ in range(40 * 4):
         tick(vm_workloadsTable, vm_taskQueue, vm_read_tasks_results)
         
     # читаем 3
@@ -272,7 +270,7 @@ def two_writes_with_two_part(
     tick(vm_workloadsTable, vm_taskQueue, vm_read_tasks_results)
     vm_write(vm_taskQueue, start_addr2, end_addr2, 2, 2, 1, 1, blob2)
     tick(vm_workloadsTable, vm_taskQueue, vm_read_tasks_results)      
-    for _ in range(40):
+    for _ in range(40 * 2):
         tick(vm_workloadsTable, vm_taskQueue, vm_read_tasks_results)
         
     # читаем 1, читаем 2, читаем 3, читаем 4
@@ -284,7 +282,7 @@ def two_writes_with_two_part(
     tick(vm_workloadsTable, vm_taskQueue, vm_read_tasks_results)
     idx4 = vm_read(vm_taskQueue, start_addr4, end_addr4, 2, 2, 2, 2)
     tick(vm_workloadsTable, vm_taskQueue, vm_read_tasks_results)    
-    for _ in range(40):
+    for _ in range(40 * 4):
         tick(vm_workloadsTable, vm_taskQueue, vm_read_tasks_results)
     
     # получаем результаты чтений по аддресам на которые записывали    
