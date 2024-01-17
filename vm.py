@@ -30,7 +30,6 @@ class Task:
     blob: List[int]     #                                   | 9       
     canGet: int         #                                   | 10
     state: int          # 0 - dont run, 1 - run, 2 - done   | 11
-    ticks : int         #                                   | 12
 
 # таблица занятости ячеек памяти
 workloadsTable = []
@@ -38,7 +37,7 @@ for i, cell in enumerate(m_hbm):
     workloadsTable.append([2, 0, 0])
     
 # таблица очереди тасок
-taskQueue: List[int] = []
+tasksQueue: List[int] = []
 
 # костыль для имитации асинхронности чтений
 # task_id   | 0
@@ -66,6 +65,7 @@ def tick(workloadTable: List[List[int]], taskQueues: List[List[int]], read_tasks
     
     for task in filtered_tasks:
         # если таска еще не в работе
+        print(task)
         if task[11] == 0:
             isFree = True
             for i in range(task[1], task[2] + 1):
@@ -113,7 +113,8 @@ def tick(workloadTable: List[List[int]], taskQueues: List[List[int]], read_tasks
                 
         # избавляемся от выполненных задач
         condition = lambda x: x[11] == 2
-        taskQueue = [x for x in taskQueue if not condition(x)]
+        # TODO what is it
+        #taskQueue = [x for x in taskQueue if not condition(x)]
 
 
 
@@ -132,7 +133,7 @@ def read(
     tcp_id: int
 ) -> int:
     task_id = nextId(taskQueue)
-    taskQueue.append([task_id, start_addr, end_addr, part, parts_count, part, task_group_id, tcp_id, 1, [], 0])
+    taskQueue.append([task_id, start_addr, end_addr, part, parts_count, part, task_group_id, tcp_id, 1, [], 0, 0])
     # если пришел последний пакет из группы
     if part == parts_count:
         # то для всех таск
@@ -159,7 +160,7 @@ def write(
     tcp_id: int,
     blob: List[int]
 ) -> None:
-    taskQueue.append([nextId(taskQueue), start_addr, end_addr, part, parts_count, part, task_group_id, tcp_id, 0, blob, 0])
+    taskQueue.append([nextId(taskQueue), start_addr, end_addr, part, parts_count, part, task_group_id, tcp_id, 0, blob, 0, 0])
     # если пришел последний пакет из группы
     if part == parts_count:
         # то для всех таск

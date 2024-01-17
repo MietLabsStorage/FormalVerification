@@ -2,7 +2,7 @@ from typing import List
 import deal
 from vm import write as vm_write
 from vm import read as vm_read
-from vm import taskQueue as vm_taskQueue
+from vm import tasksQueue as vm_taskQueue
 from vm import read_tasks_results as vm_read_tasks_results
 from vm import workloadsTable as vm_workloadsTable
 from vm import tick
@@ -43,10 +43,10 @@ pre_contracts_noparts = deal.chain(
 )
 
 # TODO зосдать тестовые методы:
-# Две записи на смежную память (для однопакетных)
-# Записать память. После этого одновременно читать и изменять её (для однопакетных)
+# + Две записи на смежную память (для однопакетных)
+# + Записать память. После этого одновременно читать и изменять её (для однопакетных)
 # 
-# Две записи на смежную память (для многопакетных)
+# Два записи на смежную память (для многопакетных)
 # Записать память. После этого одновременно читать и изменять её (для многопакетных)
 #
 # Записать память. После этого одновременно читать для двух устройств её (для однопакетных)
@@ -56,19 +56,23 @@ pre_contracts_noparts = deal.chain(
 @pre_contracts_noparts
 @deal.post(lambda result: result == True)
 def two_writes_with_one_part(start_addr1: int, end_addr1: int, blob1: List[int], start_addr2: int, end_addr2: int, blob2: List[int]) -> List[int]:
+    # пишем 1 и пишем 2
     vm_write(vm_taskQueue, start_addr1, end_addr1, 1, 1, 1, 1, blob1)
     tick(vm_workloadsTable, vm_taskQueue, vm_read_tasks_results)
     vm_write(vm_taskQueue, start_addr2, end_addr2, 1, 1, 2, 2, blob2)
-    tick(vm_workloadsTable, vm_taskQueue, vm_read_tasks_results)
-    
+    tick(vm_workloadsTable, vm_taskQueue, vm_read_tasks_results)    
     for _ in range(40):
         tick(vm_workloadsTable, vm_taskQueue, vm_read_tasks_results)
         
+    # читаем 1
     idx1 = vm_read(vm_taskQueue, start_addr1, end_addr1, 1, 1, 1, 1)    
     tick(vm_workloadsTable, vm_taskQueue, vm_read_tasks_results)
+    for _ in range(40):
+        tick(vm_workloadsTable, vm_taskQueue, vm_read_tasks_results)
+        
+    # читаем 2
     idx2 = vm_read(vm_taskQueue, start_addr2, end_addr2, 1, 1, 2, 2)
-    tick(vm_workloadsTable, vm_taskQueue, vm_read_tasks_results)
-    
+    tick(vm_workloadsTable, vm_taskQueue, vm_read_tasks_results)    
     for _ in range(40):
         tick(vm_workloadsTable, vm_taskQueue, vm_read_tasks_results)
     
@@ -77,3 +81,59 @@ def two_writes_with_one_part(start_addr1: int, end_addr1: int, blob1: List[int],
     result2 = [x for x in vm_read_tasks_results if x[0] == idx2][0][1]
     
     return result1 == blob1 or result2 == blob2
+
+
+@pre_contracts_addrs
+@pre_contracts_noparts
+@deal.post(lambda result: result == True)
+def read_and_write_with_one_part(start_addr1: int, end_addr1: int, blob1: List[int], start_addr2: int, end_addr2: int, blob2: List[int]) -> List[int]:
+    # записываем 1
+    vm_write(vm_taskQueue, start_addr1, end_addr1, 1, 1, 1, 1, blob1)
+    tick(vm_workloadsTable, vm_taskQueue, vm_read_tasks_results)    
+    for _ in range(40):
+        tick(vm_workloadsTable, vm_taskQueue, vm_read_tasks_results)
+    
+    # читаем 1 и пишем 2 
+    vm_write(vm_taskQueue, start_addr2, end_addr2, 1, 1, 2, 2, blob2)
+    tick(vm_workloadsTable, vm_taskQueue, vm_read_tasks_results)
+    idx1 = vm_read(vm_taskQueue, start_addr1, end_addr1, 1, 1, 1, 1)    
+    tick(vm_workloadsTable, vm_taskQueue, vm_read_tasks_results)    
+    for _ in range(40):
+        tick(vm_workloadsTable, vm_taskQueue, vm_read_tasks_results)
+    
+    # читаем 2
+    idx2 = vm_read(vm_taskQueue, start_addr2, end_addr2, 1, 1, 2, 2)
+    tick(vm_workloadsTable, vm_taskQueue, vm_read_tasks_results)    
+    for _ in range(40):
+        tick(vm_workloadsTable, vm_taskQueue, vm_read_tasks_results)
+        
+    # получаем результаты чтений по аддресам на которые записывали    
+    result1 = [x for x in vm_read_tasks_results if x[0] == idx1][0][1]
+    result2 = [x for x in vm_read_tasks_results if x[0] == idx2][0][1]
+    
+    return result1 == blob1 or result2 == blob2
+
+
+@pre_contracts_addrs
+@pre_contracts_noparts
+@deal.post(lambda result: result == True)
+def two_reads_with_one_part(start_addr1: int, end_addr1: int, blob1: List[int], start_addr2: int, end_addr2: int, blob2: List[int]) -> List[int]:
+    # записываем 1
+    vm_write(vm_taskQueue, start_addr1, end_addr1, 1, 1, 1, 1, blob1)
+    tick(vm_workloadsTable, vm_taskQueue, vm_read_tasks_results)    
+    for _ in range(40):
+        tick(vm_workloadsTable, vm_taskQueue, vm_read_tasks_results)
+    
+    # читаем 1 и читаем 2 
+    idx1 = vm_read(vm_taskQueue, start_addr1, end_addr1, 1, 1, 1, 1)    
+    tick(vm_workloadsTable, vm_taskQueue, vm_read_tasks_results)    
+    idx2 = vm_read(vm_taskQueue, start_addr1, end_addr1, 1, 1, 2, 2)
+    tick(vm_workloadsTable, vm_taskQueue, vm_read_tasks_results)    
+    for _ in range(40):
+        tick(vm_workloadsTable, vm_taskQueue, vm_read_tasks_results)
+        
+    # получаем результаты чтений по аддресам на которые записывали    
+    result1 = [x for x in vm_read_tasks_results if x[0] == idx1][0][1]
+    result2 = [x for x in vm_read_tasks_results if x[0] == idx2][0][1]
+    
+    return result1 == blob1 and result2 == blob1
