@@ -7,6 +7,7 @@ import deal
 
 m_hbm = [0] * 100
 
+
 @dataclass
 # not used
 class HbmWorkload:
@@ -172,9 +173,8 @@ def write(
 
 
 # TODO del
+# проверка что методы из этого файла подцеаляются во время deal prove
 @deal.pre(lambda n: n >= 0)
 @deal.post(lambda n: n > 0)
 def deal_test(n: int) -> None:
-    a = 0
-    for i in range (n):
-        a += 1
+    return -1

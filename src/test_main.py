@@ -294,3 +294,11 @@ def two_writes_with_two_part(
     result4 = [x for x in vm_read_tasks_results if x[0] == idx4][0][1]
     
     return result1 == blob1 and result2 == blob2 or result3 == blob3 and result4 == blob4
+
+
+# TODO del
+# проверка что методы из этого файла подцеаляются во время deal prove
+@deal.pre(lambda n: n >= 0)
+@deal.post(lambda n: n > 0)
+def deal_test(n: int) -> None:
+    return -1
